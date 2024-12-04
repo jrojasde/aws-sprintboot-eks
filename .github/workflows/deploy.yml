@@ -24,6 +24,13 @@ jobs:
     - name: Build with Maven
       run: mvn clean package -DskipTests
 
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-west-1 # Especifica la región aquí
+
     # Log in en Amazon ECR
     - name: Login to Amazon ECR
       id: login-ecr
@@ -43,11 +50,11 @@ jobs:
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: <your-region>
+        aws-region: us-west-1
 
     - name: Update kubeconfig
       run: |
-        aws eks update-kubeconfig --region <your-region> --name <your-cluster-name>
+        aws eks update-kubeconfig --region us-west-1 --name eks-cluster-utec-demo
 
     # Despliegue en EKS
     - name: Deploy to EKS
