@@ -12,7 +12,7 @@ public class SpringBootEksApplication {
 
     @GetMapping("/greetings")
     public String message() {
-        return "Welcome Utec ! app deployed in AWS EKS";
+        return "Welcome Utec 2024 ! app deployed in AWS EKS";
     }
 
     public static void main(String[] args) {
