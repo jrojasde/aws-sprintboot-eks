@@ -44,6 +44,11 @@ jobs:
         docker build -t $REPOSITORY_URI:$IMAGE_TAG .
         docker push $REPOSITORY_URI:$IMAGE_TAG
 
+    - name: Set dynamic image tag
+      id: ecr
+      run: echo "IMAGE_TAG=${{ github.sha }}" >> $GITHUB_ENV
+
+
     # Configurar kubectl para EKS
     - name: Configure kubectl for EKS
       uses: aws-actions/configure-aws-credentials@v2
@@ -58,6 +63,9 @@ jobs:
 
     # Despliegue en EKS
     - name: Deploy to EKS
+      env:
+        IMAGE_TAG: ${{ env.IMAGE_TAG }}
       run: |
+        sed -i "s|<IMAGE_TAG>|$IMAGE_TAG|g" k8s.yaml
         kubectl apply -f k8s.yaml
         kubectl rollout restart deployment/myapp
