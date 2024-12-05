@@ -19,9 +19,17 @@ jobs:
       uses: actions/setup-java@v3
       with:
         java-version: 17
+        distribution: 'temurin'
 
     - name: Build with Maven
       run: mvn clean package -DskipTests
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-west-1 # Especifica la región aquí
 
     # Log in en Amazon ECR
     - name: Login to Amazon ECR
@@ -31,10 +39,15 @@ jobs:
     # Construcción y publicación de la imagen Docker
     - name: Build and Push Docker image
       run: |
-        IMAGE_TAG=latest
-        REPOSITORY_URI=<your-ecr-repository-uri>
+        IMAGE_TAG=${{ github.sha }}
+        REPOSITORY_URI=654654589924.dkr.ecr.us-west-1.amazonaws.com/springboot-eks
         docker build -t $REPOSITORY_URI:$IMAGE_TAG .
         docker push $REPOSITORY_URI:$IMAGE_TAG
+
+    - name: Set dynamic image tag
+      id: ecr
+      run: echo "IMAGE_TAG=${{ github.sha }}" >> $GITHUB_ENV
+
 
     # Configurar kubectl para EKS
     - name: Configure kubectl for EKS
@@ -42,14 +55,17 @@ jobs:
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: <your-region>
+        aws-region: us-west-1
 
     - name: Update kubeconfig
       run: |
-        aws eks update-kubeconfig --region <your-region> --name <your-cluster-name>
+        aws eks update-kubeconfig --region us-west-1 --name eks-cluster-utec-demo
 
     # Despliegue en EKS
     - name: Deploy to EKS
+      env:
+        IMAGE_TAG: ${{ env.IMAGE_TAG }}
       run: |
-        kubectl apply -f k8s/deployment.yaml
-        kubectl rollout status deployment/<your-deployment-name>
+        sed -i "s|<IMAGE_TAG>|$IMAGE_TAG|g" k8s.yaml
+        kubectl apply -f k8s.yaml
+        kubectl rollout restart deployment/myapp
