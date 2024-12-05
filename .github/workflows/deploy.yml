@@ -40,7 +40,7 @@ jobs:
     - name: Build and Push Docker image
       run: |
         IMAGE_TAG=latest
-        REPOSITORY_URI=<your-ecr-repository-uri>
+        REPOSITORY_URI=654654589924.dkr.ecr.us-west-1.amazonaws.com/springboot-eks
         docker build -t $REPOSITORY_URI:$IMAGE_TAG .
         docker push $REPOSITORY_URI:$IMAGE_TAG
 
@@ -50,14 +50,14 @@ jobs:
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: <your-region>
+        aws-region: us-west-1
 
     - name: Update kubeconfig
       run: |
-        aws eks update-kubeconfig --region <your-region> --name <your-cluster-name>
+        aws eks update-kubeconfig --region us-west-1 --name eks-cluster-utec-demo
 
     # Despliegue en EKS
     - name: Deploy to EKS
       run: |
-        kubectl apply -f k8s/deployment.yaml
-        kubectl rollout status deployment/<your-deployment-name>
+        kubectl apply -f k8s.yaml
+        kubectl rollout restart deployment/myapp
